@@ -18,13 +18,13 @@ export const register = async (req, res) => {
 
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
-
+    console.log("USER : ", picturePath[0]);
     const newUser = new User({
       firstName,
       lastName,
       email,
       password: passwordHash,
-      picturePath,
+      picturePath: picturePath[0],
       friends,
       location,
       occupation,

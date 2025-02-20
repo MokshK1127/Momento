@@ -96,7 +96,11 @@ const PostWidget = ({
           height="auto"
           alt="post"
           style={{ borderRadius: "0.75rem", marginTop: "0.75rem" }}
-          src={`https://momento-server-lilac.vercel.app/assets/${picturePath}`}
+          src={
+            picturePath.startsWith("data:image/")
+              ? picturePath
+              : `data:image/png;base64,${picturePath}`
+          }
         />
       )}
       <FlexBetween mt="0.25rem">

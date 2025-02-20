@@ -37,27 +37,38 @@ const MyPostWidget = ({ picturePath }) => {
   const mediumMain = palette.neutral.mediumMain;
   const medium = palette.neutral.medium;
 
-  const handlePost = async () => {
-    const formData = new FormData();
-    formData.append("userId", _id);
-    formData.append("description", post);
-    if (image) {
-      formData.append("picture", image);
-      formData.append("picturePath", image.name);
-    }
+  const handleImageUpload = (acceptedFiles) => {
+    const file = acceptedFiles[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImage(reader.result); // Convert image to Base64
+    };
+    reader.readAsDataURL(file);
+  };
 
-    const response = await fetch(
-      `https://momento-server-lilac.vercel.app/posts`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      }
-    );
-    const posts = await response.json();
-    dispatch(setPosts({ posts }));
-    setImage(null);
-    setPost("");
+  const handlePost = async () => {
+    const payload = {
+      userId: _id,
+      description: post,
+      picture: image, // Base64 image
+    };
+
+    console.log(JSON.stringify(payload).length, " bytes");
+    const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/posts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      const posts = await response.json();
+      dispatch(setPosts({ posts }));
+      setImage(null);
+      setPost("");
+    }
   };
 
   return (
@@ -86,7 +97,7 @@ const MyPostWidget = ({ picturePath }) => {
           <Dropzone
             acceptedFiles=".jpg,.jpeg,.png"
             multiple={false}
-            onDrop={(acceptedFiles) => setImage(acceptedFiles[0])}
+            onDrop={handleImageUpload}
           >
             {({ getRootProps, getInputProps }) => (
               <FlexBetween>
@@ -102,7 +113,7 @@ const MyPostWidget = ({ picturePath }) => {
                     <p>Add Image Here</p>
                   ) : (
                     <FlexBetween>
-                      <Typography>{image.name}</Typography>
+                      <Typography>Image Selected</Typography>
                       <EditOutlined />
                     </FlexBetween>
                   )}
@@ -120,9 +131,7 @@ const MyPostWidget = ({ picturePath }) => {
           </Dropzone>
         </Box>
       )}
-
       <Divider sx={{ margin: "1.25rem 0" }} />
-
       <FlexBetween>
         <FlexBetween gap="0.25rem" onClick={() => setIsImage(!isImage)}>
           <ImageOutlined sx={{ color: mediumMain }} />
@@ -133,19 +142,16 @@ const MyPostWidget = ({ picturePath }) => {
             Image
           </Typography>
         </FlexBetween>
-
         {isNonMobileScreens ? (
           <>
             <FlexBetween gap="0.25rem">
               <GifBoxOutlined sx={{ color: mediumMain }} />
               <Typography color={mediumMain}>Clip</Typography>
             </FlexBetween>
-
             <FlexBetween gap="0.25rem">
               <AttachFileOutlined sx={{ color: mediumMain }} />
               <Typography color={mediumMain}>Attachment</Typography>
             </FlexBetween>
-
             <FlexBetween gap="0.25rem">
               <MicOutlined sx={{ color: mediumMain }} />
               <Typography color={mediumMain}>Audio</Typography>
@@ -156,7 +162,6 @@ const MyPostWidget = ({ picturePath }) => {
             <MoreHorizOutlined sx={{ color: mediumMain }} />
           </FlexBetween>
         )}
-
         <Button
           disabled={!post}
           onClick={handlePost}

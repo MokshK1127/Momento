@@ -23,7 +23,7 @@ const registerSchema = yup.object().shape({
   password: yup.string().required("required"),
   location: yup.string().required("required"),
   occupation: yup.string().required("required"),
-  picture: yup.string().required("required"),
+  picturePath: yup.string().required("required"),
 });
 
 const loginSchema = yup.object().shape({
@@ -38,7 +38,7 @@ const initialValuesRegister = {
   password: "",
   location: "",
   occupation: "",
-  picture: "",
+  picturePath: "",
 };
 
 const initialValuesLogin = {
@@ -60,10 +60,11 @@ const Form = () => {
     for (let value in values) {
       formData.append(value, values[value]);
     }
-    formData.append("picturePath", values.picture.name);
 
+    formData.append("picturePath", values.picturePath);
+    // console.log("VLAUE: ", values.picturePath);
     const savedUserResponse = await fetch(
-      "https://momento-server-lilac.vercel.app/auth/register",
+      `${process.env.REACT_APP_SERVER_URL}/auth/register`,
       {
         method: "POST",
         body: formData,
@@ -184,9 +185,14 @@ const Form = () => {
                   <Dropzone
                     acceptedFiles=".jpg,.jpeg,.png"
                     multiple={false}
-                    onDrop={(acceptedFiles) =>
-                      setFieldValue("picture", acceptedFiles[0])
-                    }
+                    onDrop={(acceptedFiles) => {
+                      const file = acceptedFiles[0];
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFieldValue("picturePath", reader.result);
+                      };
+                      reader.readAsDataURL(file);
+                    }}
                   >
                     {({ getRootProps, getInputProps }) => (
                       <Box
